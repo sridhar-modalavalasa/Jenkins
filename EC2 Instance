@@ -1,0 +1,39 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+            checkout([$class: 'GitSCM', branches: [[name: '*/main']], userRemoteConfigs: [[url: 'https://github.com/Sridhar316/Terraform.git']]])            
+
+          }
+        }
+        
+        stage ("terraform init") {
+            steps {
+                sh ('cd /var/lib/jenkins/workspace/EC2 && terraform init') 
+            }
+        }
+        
+        stage ("terraform plan") {
+            steps {
+                sh ('cd /var/lib/jenkins/workspace/EC2') 
+                withCredentials([
+              [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable:'access_key', credentialsId: 'jenkinst', secretKeyVariable:'secret_key']
+            ]) {
+              sh "terraform plan --var \"access_key=$access_key\" --var \"secret_key=$secret_key\" "
+            }
+           }
+        }
+         stage ("terraform apply") {
+            steps {
+                 sh ('cd /var/lib/jenkins/workspace/EC2')
+                 withCredentials([
+              [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable:'access_key', credentialsId: 'jenkinst', secretKeyVariable:'secret_key']
+            ]) {
+              sh "terraform apply --var \"access_key=$access_key\" --var \"secret_key=$secret_key\" -auto-approve "
+            } 
+           }
+        }
+    }
+}
