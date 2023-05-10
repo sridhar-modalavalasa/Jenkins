@@ -1,0 +1,18 @@
+pipeline {
+  agent { label "Linux" }
+  environment {
+    AWS_DEFAULT_REGION="us-east-1"
+  }
+  stages {
+    stage('Hello') {
+      steps {
+          withCredentials([aws(accessKeyVariable:'AWS_ACCESS_KEY_ID',credentialsId:'my-aws-id',secretKeyVariable:'AWS_SECRET_ACCESS_KEY')]) {
+           sh '''
+              aws s3 ls
+             '''
+           }
+          
+        }
+      }
+    }
+}
